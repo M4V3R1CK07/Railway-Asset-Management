@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum AssetStatus {
+  OPERATIONAL
+  MAINTENANCE_DUE
+  UNDER_MAINTENANCE
+  FAILED
+}
+
+enum MaintenanceStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum PredictionStatus {
+  NORMAL
+  WARNING
+  CRITICAL
+}
+
+enum UserRole {
+  ADMIN
+  ENGINEER
+  TECHNICIAN
+}
+
+model Location {
+  id          Int      @id @default(autoincrement())
+  stationCode String   @unique
+  stationName String
+  division    String
+  zone        String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assets       Asset[]
+  sensorReadings SensorReading[]
+}
+
+model Asset {
+  id               Int           @id @default(autoincrement())
+  assetCode        String        @unique
+  assetName        String        @db.VarChar(100)
+  assetType        String
+  manufacturer     String?       @db.VarChar(100)
+  installationDate DateTime?
+  status           AssetStatus   @default(OPERATIONAL)
+
+  locationId       Int
+  location         Location      @relation(fields: [locationId], references: [id], onDelete: Restrict)
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  maintenanceRecords Maintenance[]
+  sensorReadings     SensorReading[]
+  predictions        Prediction[]
+
+  @@index([locationId])
+  @@index([status])
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  employeeId  String    @unique
+  fullName    String
+  email       String    @unique
+  phone       String?
+  role        UserRole  @default(TECHNICIAN)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  maintenanceTasks Maintenance[]
+}
+
+model Maintenance {
+  id               Int                 @id @default(autoincrement())
+
+  assetId          Int
+  assignedToId     Int
+
+  title            String
+  description      String?
+
+  scheduledDate    DateTime
+  completedDate    DateTime?
+
+  priority         Priority            @default(MEDIUM)
+  status           MaintenanceStatus   @default(PENDING)
+
+  asset            Asset               @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  assignedTo       User                @relation(fields: [assignedToId], references: [id], onDelete: Restrict)
+
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  @@index([assetId])
+  @@index([assignedToId])
+}
+
+model SensorReading {
+  id            Int       @id @default(autoincrement())
+
+  assetId       Int
+  locationId    Int
+
+  temperature   Float?
+  vibration     Float?
+  voltage       Float?
+  current       Float?
+  humidity      Float?
+
+  recordedAt    DateTime  @default(now())
+
+  asset          Asset      @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  location       Location   @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  prediction     Prediction?
+
+  @@index([assetId])
+  @@index([locationId])
+  @@index([recordedAt])
+}
+
+model Prediction {
+  id                 Int               @id @default(autoincrement())
+
+  sensorReadingId    Int               @unique
+  assetId            Int
+
+  failureProbability Decimal           @db.Decimal(5,4)
+  predictedStatus    PredictionStatus
+  recommendation     String?
+
+  predictedAt        DateTime          @default(now())
+
+  sensorReading      SensorReading     @relation(fields: [sensorReadingId], references: [id], onDelete: Cascade)
+  asset              Asset             @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
+}
