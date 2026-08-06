@@ -4,154 +4,133 @@ generator client {
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
-enum AssetStatus {
+model asset {
+  id               Int             @id @default(autoincrement())
+  assetCode        String          @unique(map: "Asset_assetCode_key")
+  assetName        String          @db.VarChar(100)
+  assetType        String
+  manufacturer     String?         @db.VarChar(100)
+  installationDate DateTime?
+  status           asset_status    @default(OPERATIONAL)
+  locationId       Int
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime
+  location         location        @relation(fields: [locationId], references: [id], map: "Asset_locationId_fkey")
+  maintenance      maintenance[]
+  prediction       prediction[]
+  sensorreading    sensorreading[]
+
+  @@index([locationId], map: "Asset_locationId_idx")
+  @@index([status], map: "Asset_status_idx")
+}
+
+model location {
+  id            Int             @id @default(autoincrement())
+  stationCode   String          @unique(map: "Location_stationCode_key")
+  stationName   String
+  division      String
+  zone          String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime
+  asset         asset[]
+  sensorreading sensorreading[]
+}
+
+model maintenance {
+  id            Int                  @id @default(autoincrement())
+  assetId       Int
+  assignedToId  Int
+  title         String
+  description   String?
+  scheduledDate DateTime
+  completedDate DateTime?
+  priority      maintenance_priority @default(MEDIUM)
+  status        maintenance_status   @default(PENDING)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime
+  asset         asset                @relation(fields: [assetId], references: [id], onDelete: Cascade, map: "Maintenance_assetId_fkey")
+  user          user                 @relation(fields: [assignedToId], references: [id], map: "Maintenance_assignedToId_fkey")
+
+  @@index([assetId], map: "Maintenance_assetId_idx")
+  @@index([assignedToId], map: "Maintenance_assignedToId_idx")
+}
+
+model prediction {
+  id                 Int                        @id @default(autoincrement())
+  sensorReadingId    Int                        @unique(map: "Prediction_sensorReadingId_key")
+  assetId            Int
+  failureProbability Decimal                    @db.Decimal(5, 4)
+  predictedStatus    prediction_predictedStatus
+  recommendation     String?
+  predictedAt        DateTime                   @default(now())
+  asset              asset                      @relation(fields: [assetId], references: [id], onDelete: Cascade, map: "Prediction_assetId_fkey")
+  sensorreading      sensorreading              @relation(fields: [sensorReadingId], references: [id], onDelete: Cascade, map: "Prediction_sensorReadingId_fkey")
+
+  @@index([assetId], map: "Prediction_assetId_idx")
+}
+
+model sensorreading {
+  id          Int         @id @default(autoincrement())
+  assetId     Int
+  locationId  Int
+  temperature Float?
+  vibration   Float?
+  voltage     Float?
+  current     Float?
+  humidity    Float?
+  recordedAt  DateTime    @default(now())
+  prediction  prediction?
+  asset       asset       @relation(fields: [assetId], references: [id], onDelete: Cascade, map: "SensorReading_assetId_fkey")
+  location    location    @relation(fields: [locationId], references: [id], onDelete: Cascade, map: "SensorReading_locationId_fkey")
+
+  @@index([assetId], map: "SensorReading_assetId_idx")
+  @@index([locationId], map: "SensorReading_locationId_idx")
+  @@index([recordedAt], map: "SensorReading_recordedAt_idx")
+}
+
+model user {
+  id          Int           @id @default(autoincrement())
+  employeeId  String        @unique(map: "User_employeeId_key")
+  fullName    String
+  email       String        @unique(map: "User_email_key")
+  phone       String?
+  role        user_role     @default(TECHNICIAN)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime
+  maintenance maintenance[]
+}
+
+enum prediction_predictedStatus {
+  NORMAL
+  WARNING
+  CRITICAL
+}
+
+enum user_role {
+  ADMIN
+  ENGINEER
+  TECHNICIAN
+}
+
+enum asset_status {
   OPERATIONAL
   MAINTENANCE_DUE
   UNDER_MAINTENANCE
   FAILED
 }
 
-enum MaintenanceStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-}
-
-enum Priority {
+enum maintenance_priority {
   LOW
   MEDIUM
   HIGH
   CRITICAL
 }
 
-enum PredictionStatus {
-  NORMAL
-  WARNING
-  CRITICAL
-}
-
-enum UserRole {
-  ADMIN
-  ENGINEER
-  TECHNICIAN
-}
-
-model Location {
-  id          Int      @id @default(autoincrement())
-  stationCode String   @unique
-  stationName String
-  division    String
-  zone        String?
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  assets       Asset[]
-  sensorReadings SensorReading[]
-}
-
-model Asset {
-  id               Int           @id @default(autoincrement())
-  assetCode        String        @unique
-  assetName        String        @db.VarChar(100)
-  assetType        String
-  manufacturer     String?       @db.VarChar(100)
-  installationDate DateTime?
-  status           AssetStatus   @default(OPERATIONAL)
-
-  locationId       Int
-  location         Location      @relation(fields: [locationId], references: [id], onDelete: Restrict)
-
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-
-  maintenanceRecords Maintenance[]
-  sensorReadings     SensorReading[]
-  predictions        Prediction[]
-
-  @@index([locationId])
-  @@index([status])
-}
-
-model User {
-  id          Int       @id @default(autoincrement())
-  employeeId  String    @unique
-  fullName    String
-  email       String    @unique
-  phone       String?
-  role        UserRole  @default(TECHNICIAN)
-
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  maintenanceTasks Maintenance[]
-}
-
-model Maintenance {
-  id               Int                 @id @default(autoincrement())
-
-  assetId          Int
-  assignedToId     Int
-
-  title            String
-  description      String?
-
-  scheduledDate    DateTime
-  completedDate    DateTime?
-
-  priority         Priority            @default(MEDIUM)
-  status           MaintenanceStatus   @default(PENDING)
-
-  asset            Asset               @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  assignedTo       User                @relation(fields: [assignedToId], references: [id], onDelete: Restrict)
-
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-
-  @@index([assetId])
-  @@index([assignedToId])
-}
-
-model SensorReading {
-  id            Int       @id @default(autoincrement())
-
-  assetId       Int
-  locationId    Int
-
-  temperature   Float?
-  vibration     Float?
-  voltage       Float?
-  current       Float?
-  humidity      Float?
-
-  recordedAt    DateTime  @default(now())
-
-  asset          Asset      @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  location       Location   @relation(fields: [locationId], references: [id], onDelete: Cascade)
-
-  prediction     Prediction?
-
-  @@index([assetId])
-  @@index([locationId])
-  @@index([recordedAt])
-}
-
-model Prediction {
-  id                 Int               @id @default(autoincrement())
-
-  sensorReadingId    Int               @unique
-  assetId            Int
-
-  failureProbability Decimal           @db.Decimal(5,4)
-  predictedStatus    PredictionStatus
-  recommendation     String?
-
-  predictedAt        DateTime          @default(now())
-
-  sensorReading      SensorReading     @relation(fields: [sensorReadingId], references: [id], onDelete: Cascade)
-  asset              Asset             @relation(fields: [assetId], references: [id], onDelete: Cascade)
-
-  @@index([assetId])
+enum maintenance_status {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
 }

@@ -1,4 +1,6 @@
 import express, { Express } from "express";
+import locationRoutes from "./routes/location.routes.js";
+
 
 const app: Express = express();
 
@@ -12,5 +14,8 @@ app.get("/", (_req, res) => {
     message: "🚆 Railway Asset Management API is running",
   });
 });
+
+app.use("/api/v1/locations", locationRoutes);
+
 
 export default app;
