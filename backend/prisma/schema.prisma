@@ -17,7 +17,7 @@ model asset {
   status           asset_status    @default(OPERATIONAL)
   locationId       Int
   createdAt        DateTime        @default(now())
-  updatedAt        DateTime
+  updatedAt        DateTime        @updatedAt
   location         location        @relation(fields: [locationId], references: [id], map: "Asset_locationId_fkey")
   maintenance      maintenance[]
   prediction       prediction[]
@@ -34,7 +34,7 @@ model location {
   division      String
   zone          String?
   createdAt     DateTime        @default(now())
-  updatedAt     DateTime
+  updatedAt     DateTime        @updatedAt
   asset         asset[]
   sensorreading sensorreading[]
 }
@@ -50,7 +50,7 @@ model maintenance {
   priority      maintenance_priority @default(MEDIUM)
   status        maintenance_status   @default(PENDING)
   createdAt     DateTime             @default(now())
-  updatedAt     DateTime
+  updatedAt     DateTime             @updatedAt
   asset         asset                @relation(fields: [assetId], references: [id], onDelete: Cascade, map: "Maintenance_assetId_fkey")
   user          user                 @relation(fields: [assignedToId], references: [id], map: "Maintenance_assignedToId_fkey")
 
@@ -99,7 +99,7 @@ model user {
   phone       String?
   role        user_role     @default(TECHNICIAN)
   createdAt   DateTime      @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime      @updatedAt
   maintenance maintenance[]
 }
 
