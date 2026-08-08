@@ -1,4 +1,8 @@
 import { Router } from "express";
+import {
+  validateCreateLocation,
+  validateUpdateLocation,
+} from "../validators/location.validator.js";
 
 import {
   getAllLocations,
@@ -14,9 +18,9 @@ router.get("/", getAllLocations);
 
 router.get("/:id", getLocationById);
 
-router.post("/", createLocation);
+router.post("/", validateCreateLocation, createLocation);
 
-router.put("/:id", updateLocation);
+router.put("/:id", validateUpdateLocation, updateLocation);
 
 router.delete("/:id", deleteLocation);
 

@@ -1,24 +1,24 @@
 import { NextFunction, Request, Response } from "express";
-import locationService from "../services/location.service.js";
+import assetService from "../services/asset.service.js";
 
-export async function getAllLocations(
+export async function getAllAssets(
   _req: Request,
   res: Response,
   next: NextFunction
 ) {
   try {
-    const locations = await locationService.getAllLocations();
+    const assets = await assetService.getAllAssets();
 
     res.status(200).json({
       success: true,
-      data: locations,
+      data: assets,
     });
   } catch (error) {
     next(error);
   }
 }
 
-export async function getLocationById(
+export async function getAssetById(
   req: Request,
   res: Response,
   next: NextFunction
@@ -26,38 +26,36 @@ export async function getLocationById(
   try {
     const id = Number(req.params.id);
 
-    const location = await locationService.getLocationById(id);
+    const asset = await assetService.getAssetById(id);
 
     res.status(200).json({
       success: true,
-      data: location,
+      data: asset,
     });
   } catch (error) {
     next(error);
   }
 }
 
-export async function createLocation(
+export async function createAsset(
   req: Request,
   res: Response,
   next: NextFunction
 ) {
   try {
-    console.log("BODY =", req.body);
-    
-    const location = await locationService.createLocation(req.body);
+    const asset = await assetService.createAsset(req.body);
 
     res.status(201).json({
       success: true,
-      message: "Location created successfully",
-      data: location,
+      message: "Asset created successfully",
+      data: asset,
     });
   } catch (error) {
     next(error);
   }
 }
 
-export async function updateLocation(
+export async function updateAsset(
   req: Request,
   res: Response,
   next: NextFunction
@@ -65,19 +63,19 @@ export async function updateLocation(
   try {
     const id = Number(req.params.id);
 
-    const location = await locationService.updateLocation(id, req.body);
+    const asset = await assetService.updateAsset(id, req.body);
 
     res.status(200).json({
       success: true,
-      message: "Location updated successfully",
-      data: location,
+      message: "Asset updated successfully",
+      data: asset,
     });
   } catch (error) {
     next(error);
   }
 }
 
-export async function deleteLocation(
+export async function deleteAsset(
   req: Request,
   res: Response,
   next: NextFunction
@@ -85,11 +83,11 @@ export async function deleteLocation(
   try {
     const id = Number(req.params.id);
 
-    await locationService.deleteLocation(id);
+    await assetService.deleteAsset(id);
 
     res.status(200).json({
       success: true,
-      message: "Location deleted successfully",
+      message: "Asset deleted successfully",
     });
   } catch (error) {
     next(error);

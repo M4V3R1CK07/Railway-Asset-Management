@@ -2,6 +2,7 @@ import express, { Express } from "express";
 import locationRoutes from "./routes/location.routes.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import { notFoundHandler } from "./middlewares/notFound.middleware.js";
+import assetRoutes from "./routes/asset.routes.js";
 
 
 const app: Express = express();
@@ -18,6 +19,7 @@ app.get("/", (_req, res) => {
 });
 
 app.use("/api/v1/locations", locationRoutes);
+app.use("/api/v1/assets", assetRoutes);
 
 app.use(notFoundHandler);
 

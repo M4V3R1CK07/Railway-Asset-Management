@@ -1,4 +1,6 @@
 import locationRepository from "../repositories/location.repository.js";
+import { NotFoundError } from "../errors/NotFoundError.js";
+import { ConflictError } from "../errors/ConflictError.js";
 import {
   CreateLocationDto,
   UpdateLocationDto,
@@ -13,7 +15,7 @@ class LocationService {
     const location = await locationRepository.getLocationById(id);
 
     if (!location) {
-      throw new Error("Location not found");
+      throw new NotFoundError("Location not found");
     }
 
     return location;
@@ -26,7 +28,7 @@ class LocationService {
       );
 
     if (existingLocation) {
-      throw new Error("Station code already exists");
+      throw new ConflictError("Station code already exists");
     }
 
     return locationRepository.create(data);

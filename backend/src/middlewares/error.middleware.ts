@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { BaseError } from "../errors/BaseError.js";
 
 export function errorHandler(
   err: Error,
@@ -8,8 +9,15 @@ export function errorHandler(
 ) {
   console.error(err);
 
-  res.status(500).json({
+  if (err instanceof BaseError) {
+    return res.status(err.statusCode).json({
+      success: false,
+      message: err.message,
+    });
+  }
+
+  return res.status(500).json({
     success: false,
-    message: err.message || "Internal Server Error",
+    message: "Internal Server Error",
   });
 }
