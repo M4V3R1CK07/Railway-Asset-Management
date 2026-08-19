@@ -4,6 +4,7 @@ import assetRoutes from "./routes/asset.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import maintenanceRoutes from "./routes/maintenance.routes.js";
 import sensorReadingRoutes from "./routes/sensor-reading.routes.js";
+import predictionRoutes from "./routes/prediction.routes.js";
 
 import { errorHandler } from "./middlewares/error.middleware.js";
 import { notFoundHandler } from "./middlewares/notFound.middleware.js";
@@ -27,6 +28,7 @@ app.use("/api/v1/assets", assetRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/maintenance", maintenanceRoutes);
 app.use("/api/v1/sensor-readings", sensorReadingRoutes);
+app.use("/api/v1/predictions", predictionRoutes);
 
 app.use(notFoundHandler);
 
