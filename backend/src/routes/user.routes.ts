@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { user_role } from "@prisma/client";
 
 import {
   getAllUsers,
@@ -13,16 +14,46 @@ import {
   validateUpdateUser,
 } from "../validators/user.validator.js";
 
+import { authenticate } from "../middlewares/auth.middleware.js";
+import { authorizeRoles } from "../middlewares/role.middleware.js";
+
 const router = Router();
 
-router.get("/", getAllUsers);
+router.get(
+  "/",
+  authenticate,
+  authorizeRoles(user_role.ADMIN),
+  getAllUsers
+);
 
-router.get("/:id", getUserById);
+router.get(
+  "/:id",
+  authenticate,
+  authorizeRoles(user_role.ADMIN),
+  getUserById
+);
 
-router.post("/", validateCreateUser, createUser);
+router.post(
+  "/",
+  authenticate,
+  authorizeRoles(user_role.ADMIN),
+  validateCreateUser,
+  createUser
+);
 
-router.put("/:id", validateUpdateUser, updateUser);
+router.put(
+  "/:id",
+  authenticate,
+  authorizeRoles(user_role.ADMIN),
+  validateUpdateUser,
+  updateUser
+);
 
-router.delete("/:id", deleteUser);
+router.delete(
+  "/:id",
+  authenticate,
+  authorizeRoles(user_role.ADMIN),
+  deleteUser
+);
 
 export default router;

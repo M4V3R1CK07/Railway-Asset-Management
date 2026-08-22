@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { user_role } from "@prisma/client";
 
 import {
   getAllAssets,
@@ -13,16 +14,50 @@ import {
   validateUpdateAsset,
 } from "../validators/asset.validator.js";
 
+import { authenticate } from "../middlewares/auth.middleware.js";
+import { authorizeRoles } from "../middlewares/role.middleware.js";
+
 const router = Router();
 
-router.get("/", getAllAssets);
+router.get(
+  "/",
+  authenticate,
+  getAllAssets
+);
 
-router.get("/:id", getAssetById);
+router.get(
+  "/:id",
+  authenticate,
+  getAssetById
+);
 
-router.post("/", validateCreateAsset, createAsset);
+router.post(
+  "/",
+  authenticate,
+  authorizeRoles(
+    user_role.ADMIN,
+    user_role.ENGINEER
+  ),
+  validateCreateAsset,
+  createAsset
+);
 
-router.put("/:id", validateUpdateAsset, updateAsset);
+router.put(
+  "/:id",
+  authenticate,
+  authorizeRoles(
+    user_role.ADMIN,
+    user_role.ENGINEER
+  ),
+  validateUpdateAsset,
+  updateAsset
+);
 
-router.delete("/:id", deleteAsset);
+router.delete(
+  "/:id",
+  authenticate,
+  authorizeRoles(user_role.ADMIN),
+  deleteAsset
+);
 
 export default router;

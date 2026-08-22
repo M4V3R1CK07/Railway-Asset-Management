@@ -1,4 +1,6 @@
 import { Router } from "express";
+import { user_role } from "@prisma/client";
+
 import {
   validateCreateLocation,
   validateUpdateLocation,
@@ -12,16 +14,44 @@ import {
   deleteLocation,
 } from "../controllers/location.controller.js";
 
+import { authenticate } from "../middlewares/auth.middleware.js";
+import { authorizeRoles } from "../middlewares/role.middleware.js";
+
 const router = Router();
 
-router.get("/", getAllLocations);
+router.get(
+  "/",
+  authenticate,
+  getAllLocations
+);
 
-router.get("/:id", getLocationById);
+router.get(
+  "/:id",
+  authenticate,
+  getLocationById
+);
 
-router.post("/", validateCreateLocation, createLocation);
+router.post(
+  "/",
+  authenticate,
+  authorizeRoles(user_role.ADMIN),
+  validateCreateLocation,
+  createLocation
+);
 
-router.put("/:id", validateUpdateLocation, updateLocation);
+router.put(
+  "/:id",
+  authenticate,
+  authorizeRoles(user_role.ADMIN),
+  validateUpdateLocation,
+  updateLocation
+);
 
-router.delete("/:id", deleteLocation);
+router.delete(
+  "/:id",
+  authenticate,
+  authorizeRoles(user_role.ADMIN),
+  deleteLocation
+);
 
 export default router;
